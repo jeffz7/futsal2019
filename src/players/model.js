@@ -12,6 +12,13 @@ class PlayerModel extends Model {
         return result
     }
 
+    async getPlayerDetails (id) {
+        let query = `MATCH (p:Player{id:$id}) return p`
+        const success = await this.execute(query, {id})
+        let result = success.records[0] ? success.records[0].get(0).properties : null
+        return result
+    }
+
     async createPlayers (players) {
         let createQuery = [], returnQuery = [], param = {}
         players.map((player, i) => {
