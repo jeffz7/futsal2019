@@ -22,6 +22,12 @@ class TeamModel extends Model {
 
 
     async createTeams (teams) {
+
+        let teamsInDB = await this.getAllTeams()
+        if (teamsInDB && teamsInDB.length > 0) {
+            throw 'Teams already exists in DB'
+        }
+
         let createQuery = [], returnQuery = [], param = {}
         teams.map((team, i) => {
             createQuery.push(` CREATE (n${i}:Team) SET n${i} = $team${i} `)
