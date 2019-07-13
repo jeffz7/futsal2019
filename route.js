@@ -16,6 +16,7 @@ router.get('/teams/:id', teams.getTeamDetails)
 /** Route for Admin*/
 router.post('/players', players.createPlayers)
 router.post('/teams', teams.createTeams)
+router.post('/games', games.createGames)
 
 
 module.exports = router

@@ -20,6 +20,12 @@ class PlayerModel extends Model {
     }
 
     async createPlayers (players) {
+       
+        let playersInDB = await this.getAllPlayers()
+        if (playersInDB && playersInDB.length > 0) {
+            throw 'Players already exists in DB'
+        }
+
         let createQuery = [], returnQuery = [], param = {}
         players.map((player, i) => {
             createQuery.push(` CREATE (p${i}:Player) SET p${i} = $player${i}, p${i}.id = randomUUID() `)

@@ -16,3 +16,10 @@ module.exports.getGameDetails = async (req, res) => {
 
 }
 
+module.exports.createGames = async (req, res) => {
+    withTryCatch(async () => {
+        let games = new GameModel()
+        return await games.createGames(req.body.games)
+    }, res)
+}
+
