@@ -5,10 +5,27 @@ class GameModel extends Model {
         super()
     }
 
+    async getGameDetails (id) {
+        let query = `MATCH (g:Game{id:$id}) RETURN g`
+        const success = await this.execute(query, { id })
+        let result = success.records[0]? success.records[0].get(0).properties : null
+        if(result && result.stats){
+            result.stats = JSON.parse(result.stats)
+        }
+        return result
+    }
+
     async getAllGames () {
-        let query = `MATCH (g:Game) return g ORDER BY g.name`
+        let query = `MATCH (g:Game) RETURN g ORDER BY g.name`
         const success = await this.execute(query)
-        let result = success.records.map(record => record.get(0).properties)
+        let result = success.records.map(record => {
+            let result = record.get(0).properties
+            if(result && result.stats){
+                result.stats = JSON.parse(result.stats)
+            }
+            return result
+            
+        })
         return result
     }
 
@@ -42,6 +59,16 @@ class GameModel extends Model {
                 result.push(success.records[0].get(i).properties)
             }
         }
+        return result
+    }
+
+    async updateGame (id, patch) {
+        patch = JSON.stringify(patch)
+        let query = `MATCH (g:Game{id: $id}) ` +
+            `SET g.stats = $patch ` +
+            `RETURN g `
+        const success = await this.execute(query, { id, patch })
+        let result = success.records[0] ? success.records[0].get(0).properties : null
         return result
     }
 

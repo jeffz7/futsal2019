@@ -14,8 +14,8 @@ class TeamModel extends Model {
 
     async getTeamDetails (id) {
         let query = `MATCH (n:Team{id:$id}) return n`
-        const success = await this.execute(query, {id})
-        let result = success.records[0].get(0).properties
+        const success = await this.execute(query, { id })
+        let result = success.records[0] ? success.records[0].get(0).properties : null
         return result
     }
 
@@ -46,6 +46,19 @@ class TeamModel extends Model {
         }
         return result
 
+    }
+
+    async addPlayersIntoTeam (id, players) {
+        let query = ` MATCH (t:Team{id: $id}), (p:Player) WHERE p.id in $players` +
+            ` MERGE (p)-[:IN]->(t)` +
+            ` RETURN t, COLLECT(p)`
+        const success = await this.execute(query, { id, players })
+        let result = {}
+        if (success.records[0]) {
+            result.team = success.records[0].get(0).properties
+            result.team.players = success.records[0].get(1) ? success.records[0].get(1).map(r => r.properties) : []
+        }
+        return result
     }
 
 }
