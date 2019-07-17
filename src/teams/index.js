@@ -1,5 +1,5 @@
 const TeamModel = require('./model')
-const { withTryCatch } = require('../../utils/tryCatch')
+const { withTryCatch, withTryCatchValidation } = require('../../utils/tryCatch')
 
 module.exports.getAllTeams = async (req, res) => {
     withTryCatch(async () => {
@@ -21,4 +21,11 @@ module.exports.createTeams = async (req, res) => {
         let teams = new TeamModel()
         return await teams.createTeams(req.body.teams)
     }, res)
+}
+
+module.exports.addPlayersIntoTeam = async (req, res) => {
+    withTryCatchValidation(req, res, async () => {
+        let teams = new TeamModel()
+        return await teams.addPlayersIntoTeam(req.params.id, req.body.players)
+    })
 }

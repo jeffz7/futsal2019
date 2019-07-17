@@ -18,7 +18,14 @@ class GameModel extends Model {
     async getAllGames () {
         let query = `MATCH (g:Game) RETURN g ORDER BY g.name`
         const success = await this.execute(query)
-        let result = success.records.map(record => record.get(0).properties)
+        let result = success.records.map(record => {
+            let result = record.get(0).properties
+            if(result && result.stats){
+                result.stats = JSON.parse(result.stats)
+            }
+            return result
+            
+        })
         return result
     }
 

@@ -1,4 +1,4 @@
-// const validator = require('validator')
+const validator = require('validator')
 
 
 function isStringArray (arrayData) {
@@ -37,10 +37,37 @@ function isString (value) {
 }
 
 
+function isUUIDArray (value) {
+  if (Array.isArray(value)) {
+    if (value.length < 1) {
+      throw 'Empty array!'
+    }
+
+    if (!isUnique(value)) {
+      throw "Array should contain unique uuid's"
+    }
+    value.forEach(function (element) {
+      if (!validator.isUUID(element)) {
+        throw "Array does not contain uuid's"
+      }
+    })
+    return true
+  }
+  return false
+}
+
+function isUnique (array) {
+  return (new Set(array)).size === array.length
+}
+
+function difference (arrayB, arrayA) {
+  return arrayA.filter(x => !arrayB.includes(x))
+}
 
 
 module.exports = {
   isUnixTimeStamp,
   isStringArray,
-  isString
+  isString,
+  isUUIDArray
 }
