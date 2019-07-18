@@ -6,21 +6,41 @@ class PlayerModel extends Model {
     }
 
     async getAllPlayers () {
-        let query = `MATCH (p:Player) return p ORDER BY p.name`
+        let query = `MATCH (p:Player)
+        OPTIONAL MATCH (p)-[:SCORED]-> (gs:Goal)
+        WITH COUNT(gs) AS scored, p
+        OPTIONAL MATCH (p)-[:ASSISTED]-> (ga:Goal)
+        WITH COUNT(ga) AS assisted, scored, p
+        RETURN p ,scored, assisted order by scored desc, assisted desc, p.name`
         const success = await this.execute(query)
-        let result = success.records.map(record => record.get(0).properties)
+        let result = success.records.map(record => {
+            let player = record.get(0).properties
+            player.goal_scored = Number(record.get('scored'))
+            player.goal_assisted = Number(record.get('assisted'))
+            return player
+        })
         return result
     }
 
     async getPlayerDetails (id) {
-        let query = `MATCH (p:Player{id:$id}) return p`
-        const success = await this.execute(query, {id})
-        let result = success.records[0] ? success.records[0].get(0).properties : null
-        return result
+        let query = `MATCH (p:Player{id:$id}) 
+        OPTIONAL MATCH (p)-[:SCORED]-> (gs:Goal)
+        WITH COUNT(gs) AS scored, p
+        OPTIONAL MATCH (p)-[:ASSISTED]-> (ga:Goal)
+        WITH COUNT(ga) AS assisted, scored, p
+        RETURN p ,scored, assisted`
+        const success = await this.execute(query, { id })
+        let player = {}
+        if (success.records[0]) {
+            player = success.records[0].get(0).properties
+            player.goal_scored = Number(success.records[0].get('scored'))
+            player.goal_assisted = Number(success.records[0].get('assisted'))
+        }
+        return player
     }
 
     async createPlayers (players) {
-       
+
         let playersInDB = await this.getAllPlayers()
         if (playersInDB && playersInDB.length > 0) {
             throw 'Players already exists in DB'
