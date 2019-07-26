@@ -39,6 +39,22 @@ class PlayerModel extends Model {
         return player
     }
 
+    async getTopPlayers(){
+        let query = `MATCH (n:Player)--(:Goal) 
+        RETURN DISTINCT n AS player, size((n)-[:SCORED]->(:Goal)) AS goals, 
+        size((n)-[:ASSISTED]->(:Goal)) AS assists 
+        ORDER BY goals DESC, assists DESC, n.name ASC
+        LIMIT 10`
+        const success = await this.execute(query)
+        let result = success.records.map(record => {
+            let player = record.get('player').properties
+            player.goal_scored = Number(record.get('goals'))
+            player.goal_assisted = Number(record.get('assists'))
+            return player
+        })
+        return result
+    }
+
     async createPlayers (players) {
 
         let playersInDB = await this.getAllPlayers()

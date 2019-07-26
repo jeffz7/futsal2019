@@ -8,6 +8,10 @@ const teams = require('./src/teams')
 const gameSchema = require('./src/games/schema')
 const teamSchema = require('./src/teams/schema')
 
+/** Points table and top players */
+router.get('/players/top', players.getTopPlayers)
+router.get('/teams/top', teams.getTopTeams)
+
 router.get('/games', games.getAllGames)
 router.get('/games/:id', games.getGameDetails)
 router.get('/players', players.getAllPlayers)

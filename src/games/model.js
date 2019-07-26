@@ -11,9 +11,9 @@ class GameModel extends Model {
         RETURN 
         DISTINCT g, collect({
         goal: {id: goal.id, time: goal.time },
-        scored_by:HEAD([(goal)<-[:SCORED]-(p:Player)|{id: p.id, name: p.name, image_url: p.image_url}]),
-        assisted_by:HEAD([(goal)<-[:ASSISTED]-(p:Player)|{id: p.id, name: p.name, image_url: p.image_url}]),
-        for_team:HEAD([(goal)-[:FOR]->(t:Team)|{id: t.id, name: t.name, image_url: t.image_url}])}) AS goalDetails`
+        scored_by:HEAD([(goal)<-[:SCORED]-(p:Player)|{id: p.id, name: p.name, image: p.image}]),
+        assisted_by:HEAD([(goal)<-[:ASSISTED]-(p:Player)|{id: p.id, name: p.name, image: p.image}]),
+        for_team:HEAD([(goal)-[:FOR]->(t:Team)|{id: t.id, name: t.name, image: t.image}])}) AS goalDetails`
         const success = await this.execute(query, { id })
         let result = success.records[0] ? success.records[0].get(0).properties : null
         if (result && result.stats) {
@@ -29,9 +29,9 @@ class GameModel extends Model {
         RETURN 
         DISTINCT g, collect({
         goal: {id: goal.id, time: goal.time },
-        scored_by:HEAD([(goal)<-[:SCORED]-(p:Player)|{id: p.id, name: p.name, image_url: p.image_url}]),
-        assisted_by:HEAD([(goal)<-[:ASSISTED]-(p:Player)|{id: p.id, name: p.name, image_url: p.image_url}]),
-        for_team:HEAD([(goal)-[:FOR]->(t:Team)|{id: t.id, name: t.name, image_url: t.image_url}])}) AS goalDetails ORDER BY g.datetime desc`
+        scored_by:HEAD([(goal)<-[:SCORED]-(p:Player)|{id: p.id, name: p.name, image: p.image}]),
+        assisted_by:HEAD([(goal)<-[:ASSISTED]-(p:Player)|{id: p.id, name: p.name, image: p.image}]),
+        for_team:HEAD([(goal)-[:FOR]->(t:Team)|{id: t.id, name: t.name, image: t.image}])}) AS goalDetails ORDER BY g.game_number asc`
         const success = await this.execute(query)
         let result = success.records.map(record => {
             let result = record.get(0).properties
@@ -54,9 +54,13 @@ class GameModel extends Model {
 
         let createQuery = [], returnQuery = [], param = {}
         games.map((game, i) => {
-            let q = ` MATCH (t1${i}:Team{id:$game${i}.teams[0]}), (t2${i}:Team{id:$game${i}.teams[1]})` +
-                ` CREATE (n${i}:Game:Scheduled) SET n${i} = $game${i} ` +
-                ` CREATE (t1${i})-[:IN]->(n${i})<-[:IN]-(t2${i}) `
+            let q = ` CREATE (n${i}:Game:Scheduled) SET n${i} = $game${i} `
+            if (game.type === "Group Stage") {
+                q = ` MATCH (t1${i}:Team{id:$game${i}.teams[0]}), (t2${i}:Team{id:$game${i}.teams[1]})` +
+                    ` CREATE (n${i}:Game:Scheduled) SET n${i} = $game${i} ` +
+                    ` CREATE (t1${i})-[:IN]->(n${i})<-[:IN]-(t2${i}) `
+            }
+
             let t = []
             for (let j = 0; j <= i; j++) {
                 t.push(`n${j}`)
@@ -80,20 +84,22 @@ class GameModel extends Model {
 
     async updateGame (id, patch) {
         let goals = patch.goals
+        let winner = patch.winner || "tie"
         let goalsQueryArray = await this.creatGoalQuery(goals)
         patch = JSON.stringify(patch)
         let query = `MATCH(g: Game{ id: $id }) ` +
-            ` SET g.stats = $patch ` +
+            ` SET g.stats = $patch, g.winner = $winner, g.status="played", g:Played ` +
+            ` REMOVE g:Scheduled ` +
             ` ${goalsQueryArray.join('')} ` +
             ` RETURN g`
-        const success = await this.execute(query, { id, patch, goals })
+        const success = await this.execute(query, { id, patch, goals, winner })
         let result = success.records[0] ? success.records[0].get(0).properties : null
         return result
         // return query
     }
 
     // Internal function
-    async creatGoalQuery (goals) {
+    async creatGoalQuery (goals = []) {
         return goals.map((goal, i) => {
             let findAssistedPlayer = ''
             let createAssistEdge = ''

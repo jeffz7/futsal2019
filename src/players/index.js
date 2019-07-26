@@ -12,6 +12,13 @@ module.exports.getPlayersByTeam = async (req, res) => {
 
 }
 
+module.exports.getTopPlayers = async (req, res) => {
+    withTryCatch(async () => {
+        let players = new PlayerModel()
+        return await players.getTopPlayers()
+    }, res)
+}
+
 module.exports.getPlayerDetails = async (req, res) => {
     withTryCatch(async () => {
         let players = new PlayerModel()
