@@ -10,10 +10,10 @@ class GameModel extends Model {
         OPTIONAL MATCH (goal:Goal)-[:IN]->(g)
         RETURN 
         DISTINCT g, collect({
-        goal: {id: goal.id, time: goal.time },
+        id: goal.id, time: goal.time,
         scored_by:HEAD([(goal)<-[:SCORED]-(p:Player)|{id: p.id, name: p.name, image: p.image}]),
         assisted_by:HEAD([(goal)<-[:ASSISTED]-(p:Player)|{id: p.id, name: p.name, image: p.image}]),
-        for_team:HEAD([(goal)-[:FOR]->(t:Team)|{id: t.id, name: t.name, image: t.image}])}) AS goalDetails`
+        for_team:HEAD([(goal)-[:FOR]->(t:Team)| t.id])}) AS goalDetails`
         const success = await this.execute(query, { id })
         let result = success.records[0] ? success.records[0].get(0).properties : null
         if (result && result.stats) {
@@ -28,10 +28,10 @@ class GameModel extends Model {
         OPTIONAL MATCH (goal:Goal)-[:IN]->(g)
         RETURN 
         DISTINCT g, collect({
-        goal: {id: goal.id, time: goal.time },
+        id: goal.id, time: goal.time,
         scored_by:HEAD([(goal)<-[:SCORED]-(p:Player)|{id: p.id, name: p.name, image: p.image}]),
         assisted_by:HEAD([(goal)<-[:ASSISTED]-(p:Player)|{id: p.id, name: p.name, image: p.image}]),
-        for_team:HEAD([(goal)-[:FOR]->(t:Team)|{id: t.id, name: t.name, image: t.image}])}) AS goalDetails ORDER BY g.game_number asc`
+        for_team:HEAD([(goal)-[:FOR]->(t:Team)| t.id])}) AS goalDetails ORDER BY g.game_number asc`
         const success = await this.execute(query)
         let result = success.records.map(record => {
             let result = record.get(0).properties
