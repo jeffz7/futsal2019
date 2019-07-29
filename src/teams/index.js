@@ -29,3 +29,9 @@ module.exports.addPlayersIntoTeam = async (req, res) => {
         return await teams.addPlayersIntoTeam(req.params.id, req.body.players)
     })
 }
+module.exports.getTopTeams = async (req, res) => {
+    withTryCatchValidation(req, res, async () => {
+        let teams = new TeamModel()
+        return await teams.getTopTeams()
+    })
+}
