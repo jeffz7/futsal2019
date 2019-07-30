@@ -103,6 +103,8 @@ class GameModel extends Model {
         return goals.map((goal, i) => {
             let findAssistedPlayer = ''
             let createAssistEdge = ''
+            let own = (goal.type === 'own') ? ':Own' : ''
+ 
             if (goal.assisted_player) {
                 findAssistedPlayer = ` MATCH (gap${i}:Player{id: $goals[${i}].assisted_player}) `
                 createAssistEdge = ` MERGE (gap${i})-[:ASSISTED]->(goal${i}) `
@@ -111,7 +113,7 @@ class GameModel extends Model {
                 ` MATCH(gsp${i}: Player{ id: $goals[${i}].player }) ` +
                 findAssistedPlayer +
                 ` MATCH (gst${i}: Team{ id: $goals[${i}].team }) ` +
-                ` CREATE(goal${i}: Goal{ id: randomUUID() }) ` +
+                ` CREATE(goal${i}: Goal${own}{ id: randomUUID() }) ` +
                 ` MERGE(gsp${i}) - [: SCORED] -> (goal${i}) ` +
                 ` MERGE(gst${i}) < -[: FOR] - (goal${i}) ` +
                 ` MERGE(g) < -[: IN] - (goal${i}) ` +
