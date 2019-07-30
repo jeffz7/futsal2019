@@ -25,6 +25,7 @@ class PlayerModel extends Model {
     async getPlayerDetails (id) {
         let query = `MATCH (p:Player{id:$id}) 
         OPTIONAL MATCH (p)-[:SCORED]-> (gs:Goal)
+        WHERE NOT gs:Own
         WITH COUNT(gs) AS scored, p
         OPTIONAL MATCH (p)-[:ASSISTED]-> (ga:Goal)
         WITH COUNT(ga) AS assisted, scored, p
@@ -40,16 +41,19 @@ class PlayerModel extends Model {
     }
 
     async getTopPlayers(){
-        let query = `MATCH (n:Player)--(:Goal) 
-        RETURN DISTINCT n AS player, size((n)-[:SCORED]->(:Goal)) AS goals, 
+        let query = `MATCH (n:Player)--(g:Goal) 
+        WHERE NOT g:Own
+        WITH DISTINCT n AS player, size((n)-[:SCORED]->(:Goal)) AS goals, 
         size((n)-[:ASSISTED]->(:Goal)) AS assists 
-        ORDER BY goals DESC, assists DESC, n.name ASC
+        RETURN player, goals,assists,  goals*3 + assists as pts
+        ORDER BY pts DESC, goals DESC, assists DESC, player.name ASC
         LIMIT 10`
         const success = await this.execute(query)
         let result = success.records.map(record => {
             let player = record.get('player').properties
             player.goal_scored = Number(record.get('goals'))
             player.goal_assisted = Number(record.get('assists'))
+            player.pts = Number(record.get('pts'))
             return player
         })
         return result
