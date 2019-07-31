@@ -28,7 +28,7 @@ class GameModel extends Model {
         OPTIONAL MATCH (goal:Goal)-[:IN]->(g)
         RETURN 
         DISTINCT g, collect({
-        id: goal.id, time: goal.time,
+        id: goal.id, time: goal.time, own_goal: "Own" in labels(goal),
         scored_by:HEAD([(goal)<-[:SCORED]-(p:Player)|{id: p.id, name: p.name, image: p.image}]),
         assisted_by:HEAD([(goal)<-[:ASSISTED]-(p:Player)|{id: p.id, name: p.name, image: p.image}]),
         for_team:HEAD([(goal)-[:FOR]->(t:Team)| t.id])}) AS goalDetails ORDER BY g.game_number asc`
