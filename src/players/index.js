@@ -9,7 +9,10 @@ module.exports.getAllPlayers = async (req, res) => {
 }
 
 module.exports.getPlayersByTeam = async (req, res) => {
-
+    withTryCatch(async () => {
+        let players = new PlayerModel()
+        return await players.getAllPlayersInTeam(req.params.id)
+    }, res)
 }
 
 module.exports.getTopPlayers = async (req, res) => {
