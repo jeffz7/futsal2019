@@ -22,6 +22,14 @@ class PlayerModel extends Model {
         return result
     }
 
+    async getAllPlayersInTeam (id) {
+        let query = `MATCH (p:Player)-[:IN]->(t:Team{id:$id})
+        RETURN p order by p.name`
+        const success = await this.execute(query, { id })
+        let result = success.records.map(record => record.get(0).properties)
+        return result
+    }
+
     async getPlayerDetails (id) {
         let query = `MATCH (p:Player{id:$id}) 
         OPTIONAL MATCH (p)-[:SCORED]-> (gs:Goal)
@@ -40,7 +48,7 @@ class PlayerModel extends Model {
         return player
     }
 
-    async getTopPlayers(){
+    async getTopPlayers () {
         let query = `MATCH (n:Player)--(g:Goal) 
         WHERE NOT g:Own
         WITH DISTINCT n AS player, size((n)-[:SCORED]->(:Goal)) AS goals, 
