@@ -64,11 +64,11 @@ class TeamModel extends Model {
     async getTopTeams () {
         let query = `MATCH (n:Team)
         WITH 
-        n AS team, size((n)-[:IN]->(:Game:Played)) AS played,
-        size((n)-[:IN]->(:Game:Played{winner:n.id})) AS win,
-        size((n)-[:IN]->(:Game:Played{winner: "tie"})) AS tie,
-        size((n)<-[:FOR]-(:Goal)) AS goal_scored
-        OPTIONAL MATCH (m:Game)--(g:Goal)-[:FOR]->(t:Team) 
+        n AS team, size((n)-[:IN]->(:Game:Played{type:"Group Stage"})) AS played,
+        size((n)-[:IN]->(:Game:Played{winner:n.id, type:"Group Stage"})) AS win,
+        size((n)-[:IN]->(:Game:Played{winner: "tie", type:"Group Stage"})) AS tie,
+        size((n)<-[:FOR]-(:Goal)-[:IN]->(:Game{type:"Group Stage"})) AS goal_scored
+        OPTIONAL MATCH (m:Game{type:"Group Stage"})--(g:Goal)-[:FOR]->(t:Team) 
         where team.id in m.teams and t.id <> team.id
         RETURN count(g) as goal_conceded, team, played, win, tie,
         (played-win-tie) AS loss, (win*3 + tie) AS pts,
